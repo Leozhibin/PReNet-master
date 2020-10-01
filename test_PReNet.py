@@ -6,14 +6,14 @@ import numpy as np
 import torch
 from torch.autograd import Variable
 from utils import *
-from networks import *
+from networks_m import *
 import time 
 
 parser = argparse.ArgumentParser(description="PReNet_Test")
 parser.add_argument("--logdir", type=str, default="logs/PReNet6/", help='path to model and log files')
 parser.add_argument("--data_path", type=str, default="/media/r/BC580A85580A3F20/dataset/rain/peku/Rain100H/rainy", help='path to training data')
 parser.add_argument("--save_path", type=str, default="/home/r/works/derain_arxiv/release/results/PReNet", help='path to save results')
-parser.add_argument("--use_GPU", type=bool, default=True, help='use GPU or not')
+parser.add_argument("--use_GPU", type=bool, default=False, help='use GPU or not')
 parser.add_argument("--gpu_id", type=str, default="0", help='GPU id')
 parser.add_argument("--recurrent_iter", type=int, default=6, help='number of recursive stages')
 opt = parser.parse_args()
@@ -32,9 +32,9 @@ def main():
     print_network(model)
     if opt.use_GPU:
         model = model.cuda()
-    model.load_state_dict(torch.load(os.path.join(opt.logdir, 'net_latest.pth')))
+    model.load_state_dict(torch.load(os.path.join(opt.logdir, 'net_latest.pth'),map_location='cpu'))
     model.eval()
-
+    #import pdb;pdb.set_trace()
     time_test = 0
     count = 0
     for img_name in os.listdir(opt.data_path):
@@ -72,6 +72,7 @@ def main():
 
             if opt.use_GPU:
                 save_out = np.uint8(255 * out.data.cpu().numpy().squeeze())   #back to cpu
+                print(opt.use_GPU)
             else:
                 save_out = np.uint8(255 * out.data.numpy().squeeze())
 

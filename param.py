@@ -11,11 +11,12 @@ import torch.nn as nn
 from torch.autograd import Variable
 import torchvision.models as models
 # from models.build_model import build_model
-from networks import *
+from networks_m import *
 import numpy as np
 
 # model = build_model(x='pyconvresnet', y=50)
-model = PReNet(1,False)
+model = PReNet(4,False)
+print(model)
 resnet = model
 
 def print_model_parm_nums():
@@ -93,7 +94,7 @@ def print_model_parm_flops():
         for c in childrens:
             foo(c)
     foo(resnet)
-    input = Variable(torch.rand(3, 100, 100).unsqueeze(0), requires_grad=True)
+    input = Variable(torch.rand(3, 200, 200).unsqueeze(0), requires_grad=True)
     out = resnet(input)
     total_flops = (sum(list_conv) + sum(list_linear) + sum(list_bn) + sum(list_relu) + sum(list_pooling))
     print('Number of FLOPs: %.4fG' % (total_flops / 1e9))

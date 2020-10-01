@@ -11,62 +11,166 @@ import cv2
 import random
 import time
 import os
+
+class Self_Attn(nn.Module):
+    """ Self attention Layer"""
+    def __init__(self,in_dim,activation):
+        super(Self_Attn,self).__init__()
+        self.chanel_in = in_dim
+        self.activation = activation
+        
+        self.query_conv = nn.Conv2d(in_channels = in_dim , out_channels = in_dim//8 , kernel_size= 1)
+        self.key_conv = nn.Conv2d(in_channels = in_dim , out_channels = in_dim//8 , kernel_size= 1)
+        self.value_conv = nn.Conv2d(in_channels = in_dim , out_channels = in_dim , kernel_size= 1)
+        self.gamma = nn.Parameter(torch.zeros(1))
+
+        self.softmax  = nn.Softmax(dim=-1) #
+    def forward(self,x):
+        """
+            inputs :
+                x : input feature maps( B X C X W X H)
+            returns :
+                out : self attention value + input feature 
+                attention: B X N X N (N is Width*Height)
+        """
+        m_batchsize,C,width ,height = x.size()
+        proj_query  = self.query_conv(x).view(m_batchsize,-1,width*height).permute(0,2,1) # B X CX(N)
+        proj_key =  self.key_conv(x).view(m_batchsize,-1,width*height) # B X C x (*W*H)
+        energy =  torch.bmm(proj_query,proj_key) # transpose check
+        attention = self.softmax(energy) # BX (N) X (N) 
+        proj_value = self.value_conv(x).view(m_batchsize,-1,width*height) # B X C X N
+
+        out = torch.bmm(proj_value,attention.permute(0,2,1) )
+        out = out.view(m_batchsize,C,width,height)
+        
+        out = self.gamma*out + x
+        return out,attention
+
+class SpatialAttention(nn.Module):
+    def __init__(self, kernel_size=3):
+        super(SpatialAttention, self).__init__()
  
+        assert kernel_size in (3, 7), 'kernel size must be 3 or 7'
+        padding = 3 if kernel_size == 7 else 1
+ 
+        self.conv1 = nn.Conv2d(2, 1, kernel_size, padding=padding, bias=False)
+        self.sigmoid = nn.Sigmoid()
+ 
+    def forward(self, x):
+        avg_out = torch.mean(x, dim=1, keepdim=True)
+        max_out, _ = torch.max(x, dim=1, keepdim=True)
+        x = torch.cat([avg_out, max_out], dim=1)
+        x = self.conv1(x)
+        return self.sigmoid(x)
 
 class PReNet(nn.Module):
     def __init__(self, recurrent_iter=6, use_GPU=True):
         super(PReNet, self).__init__()
         self.iteration = recurrent_iter
         self.use_GPU = use_GPU
+	#self.sa = SpatialAttention()
 
+        self.self_attn = Self_Attn( 64, 'relu')
         self.conv0 = nn.Sequential(
             nn.Conv2d(6, 32, 3, 1, 1),
             nn.ReLU()
             )
         self.res_conv1 = nn.Sequential(
-            nn.Conv2d(32, 32, 3, 1, 1),
-            nn.ReLU(),
-            nn.Conv2d(32, 32, 3, 1, 1),
-            nn.ReLU()
+
+			# dw
+			nn.Conv2d(32, 32, 3, 1, 1, groups=32, bias=False),
+			nn.ReLU6(inplace=True),
+			# pw-linear
+			#nn.Conv2d(32, 32, 1, 1, 0, bias=False),
+			# dw
+			nn.Conv2d(32, 32, 3, 1, 1, groups=32, bias=False),
+			nn.ReLU6(inplace=True),
+			# pw-linear
+			#nn.Conv2d(32, 32, 1, 1, 0, bias=False),
+			
             )
         self.res_conv2 = nn.Sequential(
-            nn.Conv2d(32, 32, 3, 1, 1),
-            nn.ReLU(),
-            nn.Conv2d(32, 32, 3, 1, 1),
-            nn.ReLU()
+			# dw
+			nn.Conv2d(32, 32, 3, 1, 1, groups=32, bias=False),
+			nn.ReLU6(inplace=True),
+			# pw-linear
+			#nn.Conv2d(32, 32, 1, 1, 0, bias=False),
+			# dw
+			nn.Conv2d(32, 32, 3, 1, 1, groups=32, bias=False),
+			nn.ReLU6(inplace=True),
+			# pw-linear
+			#nn.Conv2d(32, 32, 1, 1, 0, bias=False),
             )
         self.res_conv3 = nn.Sequential(
-            nn.Conv2d(32, 32, 3, 1, 1),
-            nn.ReLU(),
-            nn.Conv2d(32, 32, 3, 1, 1),
-            nn.ReLU()
+			# dw
+			nn.Conv2d(32, 32, 3, 1, 1, groups=32, bias=False),
+			nn.ReLU6(inplace=True),
+			# pw-linear
+			#nn.Conv2d(32, 32, 1, 1, 0, bias=False),
+			# dw
+			nn.Conv2d(32, 32, 3, 1, 1, groups=32, bias=False),
+			nn.ReLU6(inplace=True),
+			# pw-linear
+			#nn.Conv2d(32, 32, 1, 1, 0, bias=False),
             )
         self.res_conv4 = nn.Sequential(
-            nn.Conv2d(32, 32, 3, 1, 1),
-            nn.ReLU(),
-            nn.Conv2d(32, 32, 3, 1, 1),
-            nn.ReLU()
+			# dw
+			nn.Conv2d(32, 32, 3, 1, 1, groups=32, bias=False),
+			nn.ReLU6(inplace=True),
+			# pw-linear
+			#nn.Conv2d(32, 32, 1, 1, 0, bias=False),
+			# dw
+			nn.Conv2d(32, 32, 3, 1, 1, groups=32, bias=False),
+			nn.ReLU6(inplace=True),
+			# pw-linear
+			#nn.Conv2d(32, 32, 1, 1, 0, bias=False),
             )
         self.res_conv5 = nn.Sequential(
-            nn.Conv2d(32, 32, 3, 1, 1),
-            nn.ReLU(),
-            nn.Conv2d(32, 32, 3, 1, 1),
-            nn.ReLU()
+			# dw
+			nn.Conv2d(32, 32, 3, 1, 1, groups=32, bias=False),
+			nn.ReLU6(inplace=True),
+			# pw-linear
+			#nn.Conv2d(32, 32, 1, 1, 0, bias=False),
+			# dw
+			nn.Conv2d(32, 32, 3, 1, 1, groups=32, bias=False),
+			nn.ReLU6(inplace=True),
+			# pw-linear
+			#nn.Conv2d(32, 32, 1, 1, 0, bias=False),
             )
         self.conv_i = nn.Sequential(
-            nn.Conv2d(32 + 32, 32, 3, 1, 1),
+			# dw
+			nn.Conv2d(64, 64, 3, 1, 1, groups=64, bias=False),
+			nn.ReLU6(inplace=True),
+			# pw-linear
+			nn.Conv2d(64, 32, 1, 1, 0, bias=False),
+			
             nn.Sigmoid()
             )
         self.conv_f = nn.Sequential(
-            nn.Conv2d(32 + 32, 32, 3, 1, 1),
+			# dw
+			nn.Conv2d(64, 64, 3, 1, 1, groups=64, bias=False),
+			nn.ReLU6(inplace=True),
+			# pw-linear
+			nn.Conv2d(64, 32, 1, 1, 0, bias=False),
+			
             nn.Sigmoid()
             )
         self.conv_g = nn.Sequential(
-            nn.Conv2d(32 + 32, 32, 3, 1, 1),
+			# dw
+			nn.Conv2d(64, 64, 3, 1, 1, groups=64, bias=False),
+			nn.ReLU6(inplace=True),
+			# pw-linear
+			nn.Conv2d(64, 32, 1, 1, 0, bias=False),
+			
             nn.Tanh()
             )
         self.conv_o = nn.Sequential(
-            nn.Conv2d(32 + 32, 32, 3, 1, 1),
+			# dw
+			nn.Conv2d(64, 64, 3, 1, 1, groups=64, bias=False),
+			nn.ReLU6(inplace=True),
+			# pw-linear
+			nn.Conv2d(64, 32, 1, 1, 0, bias=False),
+			
             nn.Sigmoid()
             )
         self.conv = nn.Sequential(
@@ -100,6 +204,10 @@ class PReNet(nn.Module):
             x = h
             resx = x
             x = F.relu(self.res_conv1(x) + resx)
+            
+            x = self.self_attn(x)
+#	       x = self.sa(x) * x
+
             resx = x
             x = F.relu(self.res_conv2(x) + resx)
             resx = x

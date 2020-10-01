@@ -12,9 +12,7 @@ from DerainDataset import *
 from utils import *
 from torch.optim.lr_scheduler import MultiStepLR
 from SSIM import SSIM
-#from networks import *
-from networks_m import *
-from My_loss import *
+from networks import *
 
 
 parser = argparse.ArgumentParser(description="PReNet_train")
@@ -48,9 +46,7 @@ def main():
     print_network(model)
 
     # loss function
-    #criterionMse = nn.MSELoss(size_average=False)
-    #criterionL1v1 = My_loss()
-    #criterionL1 = nn.functional.smooth_l1_loss();
+    # criterion = nn.MSELoss(size_average=False)
     criterion = SSIM()
 
     # Move to GPU
@@ -90,10 +86,9 @@ def main():
                 input_train, target_train = input_train.cuda(), target_train.cuda()
 
             out_train, _ = model(input_train)
-            pixel_metric = criterion(target_train,out_train)
-            L1_loss = nn.functional.smooth_l1_loss(out_train,target_train ) 
-            
-            loss = - pixel_metric #+ 0.2*L1_loss
+            pixel_metric = criterion(target_train, out_train)
+            loss = -pixel_metric
+
             loss.backward()
             optimizer.step()
 
@@ -134,7 +129,7 @@ if __name__ == "__main__":
         if opt.data_path.find('RainTrainL') != -1:
             print(opt.data_path.find('RainTrainL'))
             prepare_data_RainTrainL(data_path=opt.data_path, patch_size=100, stride=80)
-        elif opt.data_path.find('BladeTrainL') != -1:
+        elif opt.data_path.find('BladeTestL') != -1:
             prepare_data_RainTrainL(data_path=opt.data_path, patch_size=200, stride=80)
         elif opt.data_path.find('Rain12600') != -1:
             prepare_data_Rain12600(data_path=opt.data_path, patch_size=100, stride=100)
