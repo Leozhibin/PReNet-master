@@ -3,7 +3,7 @@ clear all;
 close all;
 
 gt_path='../datasets/test/BladeTestL/patch/clean/';
-JORDER_path='../results/Rain100L/Rain100L_JORDER/';
+%JORDER_path='../results/Rain100L/Rain100L_JORDER/';
 
 PReNet = '../datasets/test/BladeTestL/patch/noclean/';
 %PReNet_r = '../results/Rain100L/PReNet_r/';

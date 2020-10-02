@@ -532,19 +532,17 @@ def prepare_data_RainTrainL(data_path, patch_size, stride):
     input_h5f = h5py.File(save_input_path, 'w')
 
     train_num = 0
-    # for i in range(50):
-    for i in range(10):
-        # target_file = "norain-%d.png" % (i + 1)
-        # target_file = "clean-%03d.png" % (i + 1)
-        target_file = "clean-%03d.png" % (i + 51)
+    # for i in range(50):#测试集
+    for i in range(10): #训练集
+        # target_file = "clean-%03d.png" % (i + 1) #训练集
+        target_file = "clean-%03d.png" % (i + 51) #测试集
         target = cv2.imread(os.path.join(target_path,target_file))
         b, g, r = cv2.split(target)
         target = cv2.merge([r, g, b])
 
         for j in range(2):
-            # input_file = "rain-%d.png" % (i + 1)
-            # input_file = "noclean-%03d.png" % (i + 1)
-            input_file = "noclean-%03d.png" % (i + 51)
+            # input_file = "noclean-%03d.png" % (i + 1) #训练集
+            input_file = "noclean-%03d.png" % (i + 51) #测试集
             input_img = cv2.imread(os.path.join(input_path,input_file))
             b, g, r = cv2.split(input_img)
             input_img = cv2.merge([r, g, b])
@@ -564,26 +562,28 @@ def prepare_data_RainTrainL(data_path, patch_size, stride):
             input_patches = Im2Patch(input_img.transpose(2, 0, 1), win=patch_size, stride=stride)
             target_patches = Im2Patch(target_img.transpose(2, 0, 1), win=patch_size, stride=stride)
 
-
             for n in range(target_patches.shape[3]):
                 target_data = target_patches[:, :, :, n].copy()
                 input_data = input_patches[:, :, :, n].copy()
 
                 patchSub = input_data - target_data
                 sumPixel = np.sum(patchSub)
+                # 让附着物居中在图片中央
                 nonzeroxy = patchSub[0, :, :].nonzero()
                 nonzerox = np.mean(nonzeroxy[0])
                 nonzeroy = np.mean(nonzeroxy[1])
-                # print("sum " + str(sumPixel))
-                if(sumPixel!=0.0 and nonzerox>50.0 and nonzerox<150.0 and nonzeroy>50.0 and nonzeroy<150.0):
-                    target_data= target_data.transpose(1, 2, 0)
-                    target_data = cv2.resize(target_data, dsize=(100, 100), interpolation=cv2.INTER_NEAREST)
-                    target_data = target_data.transpose(2, 0, 1)
-                    target_h5f.create_dataset(str(train_num), data=target_data)
 
-                    input_data= input_data.transpose(1, 2, 0)
-                    input_data = cv2.resize(input_data, dsize=(100, 100), interpolation=cv2.INTER_NEAREST)
-                    input_data = input_data.transpose(2, 0, 1)
+                if(sumPixel!=0.0 and nonzerox>50.0 and nonzerox<150.0 and nonzeroy>50.0 and nonzeroy<150.0):
+                    # 将200x200 resize成100x100
+                    # target_data= target_data.transpose(1, 2, 0)
+                    # target_data = cv2.resize(target_data, dsize=(100, 100), interpolation=cv2.INTER_NEAREST)
+                    # target_data = target_data.transpose(2, 0, 1)
+
+                    # input_data= input_data.transpose(1, 2, 0)
+                    # input_data = cv2.resize(input_data, dsize=(100, 100), interpolation=cv2.INTER_NEAREST)
+                    # input_data = input_data.transpose(2, 0, 1)
+
+                    target_h5f.create_dataset(str(train_num), data=target_data)
                     input_h5f.create_dataset(str(train_num), data=input_data)
                     train_num += 1
             # print("sum " + str(train_num))
