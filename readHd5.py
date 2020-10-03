@@ -8,8 +8,11 @@ from PIL import Image
 # target_path = "E:\\lzb\\derain\\PReNet-master\\datasets\\train\\BladeTrainL"
 target_path = "D:\\code\\PReNet-master-master\\datasets\\test\\BladeTestL"
 print(os.path.join(target_path+"train_input.h5"))
-train_inputs = h5py.File(os.path.join(target_path,"train_input.h5"),'r')#//此文件下的data数据
-train_targets = h5py.File(os.path.join(target_path,"train_target.h5"),'r')#//此文件下的data数据
+# train_inputs = h5py.File(os.path.join(target_path,"train_input.h5"),'r')#//此文件下的data数据
+# train_targets = h5py.File(os.path.join(target_path,"train_target.h5"),'r')#//此文件下的data数据
+
+train_inputs = h5py.File(os.path.join(target_path,"train_input200r100.h5"),'r')#//此文件下的data数据
+train_targets = h5py.File(os.path.join(target_path,"train_target200r100.h5"),'r')#//此文件下的data数据
 # train_targets = h5py.File(target_path+"/train_target.h5")['data']#//此文件下的lable数据
 lenght=len(train_inputs)#//获取数据的长度
 for i in range(len(train_inputs)):#//for循环提取数据

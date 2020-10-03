@@ -2,10 +2,11 @@
 clear all;
 close all;
 
-gt_path='../datasets/test/BladeTestL/patch/clean/';
+gt_path='../datasets/test/BladeTestL/patch/clean567//';
 %JORDER_path='../results/Rain100L/Rain100L_JORDER/';
 
-PReNet = '../datasets/test/BladeTestL/patch/noclean/';
+%PReNet = '../datasets/test/BladeTestL/patch/noclean567/';
+PReNet = 'C:/Users/Leonard/Desktop/fsdownload/resultpatch200MobileExpand1No1x1_100_r2/';
 %PReNet_r = '../results/Rain100L/PReNet_r/';
 %PRN = '../results/Rain100L/PRN6/';
 %PRN_r = '../results/Rain100L/PRN_r/';
@@ -18,7 +19,7 @@ struct_model = {
     };
 
 
-nimgs=572;nrain=1;
+nimgs=567;nrain=1;
 nmodel = length(struct_model);
 
 psnrs = zeros(nimgs,nmodel);
