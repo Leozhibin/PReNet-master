@@ -6,7 +6,10 @@ __pycache__/
 # C extensions
 *.so
 datasets/
+logs/
+*.zip
 # Distribution / packaging
+.idea/
 .Python
 build/
 develop-eggs/
