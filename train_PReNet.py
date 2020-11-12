@@ -24,7 +24,7 @@ parser.add_argument("--lr", type=float, default=1e-3, help="initial learning rat
 parser.add_argument("--save_path", type=str, default="logs/PReNet_test", help='path to save models and log files')
 parser.add_argument("--save_freq",type=int,default=1,help='save intermediate model')
 parser.add_argument("--data_path",type=str, default="datasets/train/Rain12600",help='path to training data')
-parser.add_argument("--use_gpu", type=bool, default=True, help='use GPU or not')
+parser.add_argument("--use_gpu", type=bool, default=False, help='use GPU or not')
 parser.add_argument("--gpu_id", type=str, default="0", help='GPU id')
 parser.add_argument("--recurrent_iter", type=int, default=6, help='number of recursive stages')
 opt = parser.parse_args()
@@ -133,6 +133,8 @@ if __name__ == "__main__":
             prepare_data_RainTrainL(data_path=opt.data_path, patch_size=200, stride=40)
         elif opt.data_path.find('BladeTestL') != -1:
             prepare_data_RainTrainL(data_path=opt.data_path, patch_size=200, stride=40)
+        elif opt.data_path.find('Rain100H') != -1:
+            prepare_data_RainTrainH1(data_path=opt.data_path, patch_size=100, stride=40)
         elif opt.data_path.find('Rain12600') != -1:
             prepare_data_Rain12600(data_path=opt.data_path, patch_size=100, stride=100)
         else:

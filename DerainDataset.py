@@ -441,6 +441,58 @@ def prepare_data_RainTrainH(data_path, patch_size, stride):
 
     print('training set, # samples %d\n' % train_num)
 
+def prepare_data_RainTrainH1(data_path, patch_size, stride):
+    # train
+    print('process training data')
+    input_path = os.path.join(data_path)
+    target_path = os.path.join(data_path)
+
+    save_target_path = os.path.join(data_path, 'train_target.h5')
+    save_input_path = os.path.join(data_path, 'train_input.h5')
+
+    target_h5f = h5py.File(save_target_path, 'w')
+    input_h5f = h5py.File(save_input_path, 'w')
+
+    train_num = 0
+    for i in range(100):
+        target_file = "norain-%03d.png" % (i + 1)
+        if os.path.exists(os.path.join(target_path,target_file)):
+
+            target = cv2.imread(os.path.join(target_path,target_file))
+            b, g, r = cv2.split(target)
+            target = cv2.merge([r, g, b])
+
+            input_file = "rain-%03d.png" % (i + 1)
+
+            if os.path.exists(os.path.join(input_path,input_file)): # we delete 546 samples
+
+                input_img = cv2.imread(os.path.join(input_path,input_file))
+                b, g, r = cv2.split(input_img)
+                input_img = cv2.merge([r, g, b])
+
+                target_img = target
+                target_img = np.float32(normalize(target_img))
+                target_patches = Im2Patch(target_img.transpose(2,0,1), win=patch_size, stride=stride)
+
+                input_img = np.float32(normalize(input_img))
+                input_patches = Im2Patch(input_img.transpose(2, 0, 1), win=patch_size, stride=stride)
+
+                print("target file: %s # samples: %d" % (input_file, target_patches.shape[3]))
+
+                for n in range(target_patches.shape[3]):
+                    target_data = target_patches[:, :, :, n].copy()
+                    target_h5f.create_dataset(str(train_num), data=target_data)
+
+                    input_data = input_patches[:, :, :, n].copy()
+                    input_h5f.create_dataset(str(train_num), data=input_data)
+
+                    train_num += 1
+
+    target_h5f.close()
+    input_h5f.close()
+
+    print('training set, # samples %d\n' % train_num)
+
 def prepare_data_BladeTrainL(data_path, patch_size, stride):
     # train
     print('process training data')
